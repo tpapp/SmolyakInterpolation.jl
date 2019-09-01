@@ -49,8 +49,8 @@ end
     if (ι1 < first(I) && ∑ι < cap)
         true, (ι1 + 1, Base.tail(ι)...)
     else
-        Δ = 1 - ι1
-        valid, ιtail = __inc(cap - 1, ∑ι + Δ - 1, Base.tail(I), Base.tail(ι))
+        Δ1 = 1 - ι1
+        valid, ιtail = __inc(cap - 1, ∑ι + Δ1 - 1, Base.tail(I), Base.tail(ι))
         valid, (1, ιtail...)
     end
 end
