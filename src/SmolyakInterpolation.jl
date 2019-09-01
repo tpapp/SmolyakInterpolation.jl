@@ -1,6 +1,6 @@
 module SmolyakInterpolation
 
-export CappedCartesianIndices, gridpoint_set
+export CappedCartesianIndices, gridpoint_set, polynomials_at
 
 using ArgCheck: @argcheck
 using DocStringExtensions: SIGNATURES
@@ -81,6 +81,27 @@ function gridpoint_set(k::Integer)
         N = 2^(k - 1)
         cospi.(((N-1):-2:1) ./ N)
     end
+end
+
+####
+#### Chebyshev polynomials
+####
+
+"""
+$(SIGNATURES)
+
+First `N` Chebyshev polynomials, evaluated at `x`, as columns of a matrix.
+"""
+function polynomials_at(N::Integer, x::AbstractVector{T}) where {T}
+    @argcheck N ≥ 0
+    Z = ones(T, length(x), N)
+    if N ≥ 2
+        Z[:, 2] = x
+    end
+    for j in 3:N
+        @. Z[:, j] = 2 * x * Z[:, j - 1] - Z[:, j - 2]
+    end
+    Z
 end
 
 end # module
