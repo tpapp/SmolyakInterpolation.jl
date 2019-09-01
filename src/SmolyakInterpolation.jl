@@ -1,6 +1,6 @@
 module SmolyakInterpolation
 
-export CappedCartesianIndices
+export CappedCartesianIndices, gridpoint_set
 
 using ArgCheck: @argcheck
 using DocStringExtensions: SIGNATURES
@@ -52,6 +52,34 @@ end
         Δ1 = 1 - ι1
         valid, ιtail = __inc(cap - 1, ∑ι + Δ1 - 1, Base.tail(I), Base.tail(ι))
         valid, (1, ιtail...)
+    end
+end
+
+####
+#### disjoint sets of gridpoints
+####
+
+"""
+$(SIGNATURES)
+
+Set of additional (Chebyshev-Lobatto) gridpoints for index `k ≥ 1`. Sets are disjoint,
+contain elements in increasing order, which for `k ∈ 2:K` contain the Chebyshev-Lobatto
+gridpoints
+
+```math
+cos(πj / (N+ 1))
+```
+for ``j=0, …, N+1`` where ``N = 2ᴷ``, in an interleaved pattern. `k == 1` is just `[0.0]`.
+"""
+function gridpoint_set(k::Integer)
+    if k == 1
+        [0.0]
+    elseif k == 2
+        [-1.0, 1.0]
+    else
+        @argcheck k ≥ 1
+        N = 2^(k - 1)
+        cospi.(((N-1):-2:1) ./ N)
     end
 end
 
