@@ -8,3 +8,5 @@
 ![Lifecycle](https://img.shields.io/badge/lifecycle-dormant-blue.svg) -->
 [![Build Status](https://travis-ci.com/tpapp/SmolyakInterpolation.jl.svg?branch=master)](https://travis-ci.com/tpapp/SmolyakInterpolation.jl)
 [![codecov.io](http://codecov.io/github/tpapp/SmolyakInterpolation.jl/coverage.svg?branch=master)](http://codecov.io/github/tpapp/SmolyakInterpolation.jl?branch=master)
+
+Julia package with simple building blocks for Smolyak interpolation on the [-1,1]ⁿ hypercube.
