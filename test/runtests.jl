@@ -1,7 +1,7 @@
-using SmolyakInterpolation, Test
+using SmolyakInterpolation, Test, StaticArrays
 
 # internals to be tested
-using SmolyakInterpolation: set_length, set_range, largest_index
+using SmolyakInterpolation: set_length, set_range, largest_index, prefix_combinations
 
 "Simple function to test iterator."
 function naive_capped_indices(cap, I)
@@ -11,11 +11,11 @@ end
 @testset "capped cartesian indices" begin
     for _ in 1:100
         I = Tuple(rand(1:5, rand(1:5)))
-        cap = sum(I) + rand(0:5)
+        cap = length(I) + rand(0:5)
         iter = CappedCartesianIndices(cap, I)
         naive = naive_capped_indices(cap, I)
         @test length(naive) == @inferred length(iter)
-        collect(iter) == naive
+        @test collect(iter) == naive
         @test @inferred(largest_index(iter)) == maximum(maximum.(naive))
     end
     @test_throws ArgumentError CappedCartesianIndices(1, (3, 3,)) # sum too low
@@ -52,4 +52,17 @@ end
     @test rs[1:4] == [1:1, 2:3, 4:5, 6:9]
     @test all(@. last(rs[1:(end - 1)]) + 1 == first(rs[2:end])) # contiguous
     @test length.(rs) == set_length.(ks)                        # consistent with length
+end
+
+@testset "prefix combinations" begin
+    @test prefix_combinations([1, 2], [()]) == [(1, ), (2, )]
+    @test prefix_combinations([1, 2], [(3, ), (4, )]) == [(1, 3), (2, 3), (1, 4), (2, 4)]
+end
+
+@testset "basis and coordinates" begin
+    B, x = basis_and_coordinates(3, (4, 4))
+    d = degrees_of_freedom(3, (4, 4))
+    @test size(B) == (d, d)
+    @test size(x) == (d, )
+    @test eltype(x) == SVector{2, Float64}
 end

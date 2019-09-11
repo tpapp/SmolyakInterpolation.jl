@@ -69,6 +69,8 @@ function gridpoint_set(k::Integer)
     end
 end
 
+all_gridpoints(K::Integer) = mapreduce(gridpoint_set, vcat, 1:K)
+
 ####
 #### Chebyshev polynomials
 ####

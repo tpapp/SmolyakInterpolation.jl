@@ -1,10 +1,12 @@
 module SmolyakInterpolation
 
-export CappedCartesianIndices, gridpoint_set, set_length_counts, polynomials_at
+export CappedCartesianIndices, gridpoint_set, set_length_counts, polynomials_at,
+    degrees_of_freedom, basis_and_coordinates
 
 using ArgCheck: @argcheck
 using DocStringExtensions: SIGNATURES
 using Parameters: @unpack
+using StaticArrays: SVector
 
 include("utilities.jl")
 include("univariate.jl")
@@ -27,7 +29,10 @@ Base.IteratorSize(::Type{<:CappedCartesianIndices}) = Base.HasLength()
 
 function Base.length(iter::CappedCartesianIndices)
     @unpack cap, I = iter
-    C = mapfoldr(i -> Counts(1:i, ones(Int, i)), (C1, C2) -> convolve_counts(cap, C1, C2), I)
+    C = mapfoldr((C1, C2) -> convolve_counts(cap, C1, C2), I) do i
+        i = min(cap, i)
+        Counts(1:i, ones(Int, i))
+    end
     sum(C.counts)
 end
 
@@ -50,7 +55,7 @@ end
 
 @inline function __inc(cap::Int, ∑ι::Int, I::Tuple{Int}, ι::Tuple{Int})
     ι1 = first(ι)
-    ι1 < first(I), (ι1 + 1, )
+    (ι1 < first(I) && ∑ι < cap), (ι1 + 1, )
 end
 
 @inline function __inc(cap, ∑ι, I, ι)
@@ -76,14 +81,28 @@ end
 
 function degrees_of_freedom(cap, I)
     C = mapfoldr((C1, C2) -> convolve_counts(cap, C1, C2), I) do i
-        indexes = 1:i
+        indexes = 1:min(i, cap)
         Counts(indexes, set_length.(indexes))
     end
-    mapreduce(((i, c), ) -> i * c, pairs(C))
+    sum(C.counts)
 end
 
-function basis_matrix(cap, I)
-    maximum
+prefix_combinations(x, y) = vec(((x, y) -> (x, y...)).(x, permutedims(y)))
+
+"""
+$(SIGNATURES)
+"""
+function basis_and_coordinates(cap::Int, I::NTuple{N,Int}) where {N}
+    iter = CappedCartesianIndices(cap, I)
+    K = largest_index(iter)
+    R = set_range.(1:K)
+    x0 = all_gridpoints(K)
+    B0 = polynomials_at(last(last(R)), x0)
+    Bij(i, j) = mapreduce(((i, j), ) -> B0[R[i], R[j]], kron, zip(i, j))
+    xi(i) = mapfoldr(i -> x0[R[i]], prefix_combinations, i, init = [()])
+    B = mapreduce(j -> mapreduce(i -> Bij(i, j), vcat, iter), hcat, iter)
+    x = mapreduce(xi, vcat, iter)
+    B, SVector.(x)
 end
 
 end # module
