@@ -1,10 +1,13 @@
 module SmolyakInterpolation
 
-export CappedCartesianIndices, gridpoint_set, polynomials_at
+export CappedCartesianIndices, gridpoint_set, set_length_counts, polynomials_at
 
 using ArgCheck: @argcheck
 using DocStringExtensions: SIGNATURES
 using Parameters: @unpack
+
+include("utilities.jl")
+include("univariate.jl")
 
 ####
 #### capped cartesian indices iterator
@@ -20,7 +23,13 @@ struct CappedCartesianIndices{N}
     end
 end
 
-Base.IteratorSize(::Type{<:CappedCartesianIndices}) = Base.SizeUnknown() # FIXME and calculate
+Base.IteratorSize(::Type{<:CappedCartesianIndices}) = Base.HasLength()
+
+function Base.length(iter::CappedCartesianIndices)
+    @unpack cap, I = iter
+    C = mapfoldr(i -> Counts(1:i, ones(Int, i)), (C1, C2) -> convolve_counts(cap, C1, C2), I)
+    sum(C.counts)
+end
 
 Base.IteratorEltype(::Type{<:CappedCartesianIndices}) = Base.HasEltype()
 
@@ -55,53 +64,26 @@ end
     end
 end
 
-####
-#### disjoint sets of gridpoints
-####
-
 """
 $(SIGNATURES)
 
-Set of additional (Chebyshev-Lobatto) gridpoints for index `k ≥ 1`. Sets are disjoint,
-contain elements in increasing order, which for `k ∈ 2:K` contain the Chebyshev-Lobatto
-gridpoints
-
-```math
-cos(πj / (N+ 1))
-```
-for ``j=0, …, N+1`` where ``N = 2ᴷ``, in an interleaved pattern. `k == 1` is just `[0.0]`.
+Largest individual index that will be in the values of the iterator.
 """
-function gridpoint_set(k::Integer)
-    if k == 1
-        [0.0]
-    elseif k == 2
-        [-1.0, 1.0]
-    else
-        @argcheck k ≥ 1
-        N = 2^(k - 1)
-        cospi.(((N-1):-2:1) ./ N)
-    end
+function largest_index(iter::CappedCartesianIndices{N}) where N
+    @unpack cap, I = iter
+    min(cap - N + 1, maximum(I))
 end
 
-####
-#### Chebyshev polynomials
-####
-
-"""
-$(SIGNATURES)
-
-First `N` Chebyshev polynomials, evaluated at `x`, as columns of a matrix.
-"""
-function polynomials_at(N::Integer, x::AbstractVector{T}) where {T}
-    @argcheck N ≥ 0
-    Z = ones(T, length(x), N)
-    if N ≥ 2
-        Z[:, 2] = x
+function degrees_of_freedom(cap, I)
+    C = mapfoldr((C1, C2) -> convolve_counts(cap, C1, C2), I) do i
+        indexes = 1:i
+        Counts(indexes, set_length.(indexes))
     end
-    for j in 3:N
-        @. Z[:, j] = 2 * x * Z[:, j - 1] - Z[:, j - 2]
-    end
-    Z
+    mapreduce(((i, c), ) -> i * c, pairs(C))
+end
+
+function basis_matrix(cap, I)
+    maximum
 end
 
 end # module

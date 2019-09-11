@@ -1,5 +1,8 @@
 using SmolyakInterpolation, Test
 
+# internals to be tested
+using SmolyakInterpolation: set_length, set_range, largest_index
+
 "Simple function to test iterator."
 function naive_capped_indices(cap, I)
     [Tuple(ι) for ι in CartesianIndices(map(i -> 1:i, I)) if sum(Tuple(ι)) ≤ cap]
@@ -10,7 +13,10 @@ end
         I = Tuple(rand(1:5, rand(1:5)))
         cap = sum(I) + rand(0:5)
         iter = CappedCartesianIndices(cap, I)
-        collect(iter) == naive_capped_indices(cap, I)
+        naive = naive_capped_indices(cap, I)
+        @test length(naive) == @inferred length(iter)
+        collect(iter) == naive
+        @test @inferred(largest_index(iter)) == maximum(maximum.(naive))
     end
     @test_throws ArgumentError CappedCartesianIndices(1, (3, 3,)) # sum too low
     @test_throws ArgumentError CappedCartesianIndices(5, (0, 3,)) # negative
@@ -38,4 +44,12 @@ end
     @test size(polynomials_at(0, x)) == (J, 0)
     @test polynomials_at(1, x) == ones(J, 1)
     @test polynomials_at(2, x) == hcat(ones(J, 1), x)
+end
+
+@testset "set length and range" begin
+    ks = 1:10
+    rs = set_range.(ks)
+    @test rs[1:4] == [1:1, 2:3, 4:5, 6:9]
+    @test all(@. last(rs[1:(end - 1)]) + 1 == first(rs[2:end])) # contiguous
+    @test length.(rs) == set_length.(ks)                        # consistent with length
 end
