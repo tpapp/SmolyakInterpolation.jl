@@ -40,7 +40,8 @@ end
 """
 $(SIGNATURES)
 
-Calculate the matrix `A[R[i[1]], R[j[1]] ⊗ A[R[i[2]], R[j[2]] ⊗ …`, where
+Calculate the matrix `A[R[i[end]], R[j[end]] ⊗ … ⊗ A[R[i[2]], R[j[2]] ⊗ A[R[i[1]], R[j[1]]`,
+where
 
 - `A` is the basis matrix for all points and basis functions,
 
@@ -51,7 +52,7 @@ Calculate the matrix `A[R[i[1]], R[j[1]] ⊗ A[R[i[2]], R[j[2]] ⊗ …`, where
 Internal helper function used in building basis matrices.
 """
 function _basis_block(A, R, i, j)
-    mapreduce(((i, j), ) -> A[R[i], R[j]], kron, zip(i, j))
+    mapreduce(((i, j), ) -> A[R[i], R[j]], (A1, A2) -> kron(A2, A1), zip(i, j))
 end
 
 """
@@ -104,12 +105,12 @@ function interpolate(basis::HomogeneousBasis{N}, b::AbstractVector{T1},
     iter = CappedCartesianIndices(cap, I)
     S = float(promote_type(T1, T2))
     Ks = largest_indices(iter)
-    Rs = map(K -> set_range.(univariate, 1:K), Ks)
-    A0s = map((K, R, x) -> evaluate(last(last(R)), univariate, x), Ks, Rs, x)
+    R = set_range.(univariate, 1:maximum(Ks))
+    A0s = map((K, x) -> evaluate(last(R[K]), univariate, x), Ks, x)
     v = zero(S)
     p = 1
     for i in iter
-        for I in CartesianIndices(map(getindex, Rs, i))
+        for I in CartesianIndices(map(i -> R[i], i))
             v += prod(map(getindex, A0s, Tuple(I))) * b[p]
             p += 1
         end

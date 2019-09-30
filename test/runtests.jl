@@ -4,6 +4,8 @@ using SmolyakInterpolation, Test, StaticArrays
 using SmolyakInterpolation:
     # utilities
     Counts, count_combinations, CappedCartesianIndices, largest_indices,
+    # Chebyshev
+    all_gridpoints,
     # basis
     _basis_block, _coordinate_block
 
