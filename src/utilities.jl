@@ -113,9 +113,9 @@ end
 """
 $(SIGNATURES)
 
-Largest *individual index* that will be in the values of the iterator.
+Largest indices for each axis that occur in the iteration.
 """
-function largest_index(iter::CappedCartesianIndices{N}) where N
+function largest_indices(iter::CappedCartesianIndices{N}) where N
     @unpack cap, I = iter
-    min(cap - N + 1, maximum(I))
+    min.(cap - N + 1, I)
 end

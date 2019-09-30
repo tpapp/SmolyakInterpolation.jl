@@ -118,7 +118,7 @@ $(SIGNATURES)
 Evaluate the first `N` basis functions at `x`, returning a vector.
 """
 function evaluate(N::Integer, C::Chebyshev, x::Real)
-    evaluate!(Vector{float(eltype(x))}(undef, length(x)), C, x)
+    evaluate!(Vector{float(eltype(x))}(undef, N), C, x)
 end
 
 """

@@ -4,7 +4,7 @@ export
     # chebyshev
     Chebyshev, set_length, set_range, gridpoint_set, evaluate, evaluate!,
     # basis
-    HomogeneousBasis, degrees_of_freedom, basis_matrix_and_coordinates
+    HomogeneousBasis, degrees_of_freedom, basis_matrix_and_coordinates, interpolate
 
 using ArgCheck: @argcheck
 using DocStringExtensions: FIELDS, SIGNATURES, TYPEDEF

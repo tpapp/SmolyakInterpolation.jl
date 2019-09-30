@@ -37,7 +37,8 @@ end
         naive = naive_capped_indices(cap, I)
         @test length(naive) == @inferred length(iter)
         @test collect(iter) == naive
-        @test @inferred(largest_index(iter)) == maximum(maximum.(naive))
+        @test @inferred(largest_indices(iter)) ==
+            Tuple(maximum(mapreduce(x -> [x...], hcat, naive); dims = 2))
     end
     @test_throws ArgumentError CappedCartesianIndices(1, (3, 3,)) # sum too low
     @test_throws ArgumentError CappedCartesianIndices(5, (0, 3,)) # negative
