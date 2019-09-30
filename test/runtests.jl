@@ -1,4 +1,4 @@
-using SmolyakInterpolation, Test, StaticArrays
+using SmolyakInterpolation, Test, StaticArrays, LinearAlgebra
 
 # internals to be tested
 using SmolyakInterpolation:

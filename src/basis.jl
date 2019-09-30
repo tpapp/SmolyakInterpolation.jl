@@ -98,22 +98,77 @@ function basis_matrix_and_coordinates(basis::HomogeneousBasis)
     A, SVector.(x)
 end
 
-function interpolate(basis::HomogeneousBasis{N}, b::AbstractVector{T1},
-                     x::AbstractVector{T2}) where {T1, T2, N}
+"""
+$(SIGNATURES)
+
+Helper function for iterating when interpolating `basis` at `x`.
+
+Return a `NamedTuple` of
+
+- `iter`: an iterator for the set indices,
+- `R`: a vector of set ranges
+- `A0s`: basis matrices for each coordinate, to be indexed by elements of `R`
+"""
+function _interpolation_helper(basis::HomogeneousBasis{N}, x::AbstractVector) where {N}
     @argcheck length(x) == N
     @unpack univariate, I, cap = basis
     iter = CappedCartesianIndices(cap, I)
-    S = float(promote_type(T1, T2))
     Ks = largest_indices(iter)
     R = set_range.(univariate, 1:maximum(Ks))
     A0s = map((K, x) -> evaluate(last(R[K]), univariate, x), Ks, x)
+    (iter = iter, R = R, A0s = A0s)
+end
+
+"""
+$(SIGNATURES)
+
+Interpolate `basis` with coefficients `c` at `x`.
+"""
+function interpolate(basis::HomogeneousBasis, c::AbstractVector{T1},
+                     x::AbstractVector{T2}) where {T1, T2}
+    @unpack iter, R, A0s = _interpolation_helper(basis, x)
+    S = float(promote_type(T1, T2))
     v = zero(S)
     p = 1
     for i in iter
         for I in CartesianIndices(map(i -> R[i], i))
-            v += prod(map(getindex, A0s, Tuple(I))) * b[p]
+            v += prod(map(getindex, A0s, Tuple(I))) * c[p]
             p += 1
         end
     end
     v
+end
+
+"""
+$(SIGNATURES)
+
+In-place version of [`interpolated_basis`](@ref). Overwrites the first argument,
+which should have length `degrees_of_freedom(basis)`.
+"""
+function interpolated_basis!(a::AbstractVector, basis::HomogeneousBasis, x::AbstractVector)
+    @unpack iter, R, A0s = _interpolation_helper(basis, x)
+    p = 1
+    for i in iter
+        for I in CartesianIndices(map(i -> R[i], i))
+            a[p] = prod(map(getindex, A0s, Tuple(I)))
+            p += 1
+        end
+    end
+    a
+end
+
+"""
+$(SIGNATURES)
+
+Return a vector `a` such that
+
+```julia
+dot(a, c) ≈ interpolate(basis, c, x)
+```
+
+This is useful when repeatedly interpolating at the same set of coordinates `x` (`a` is
+specific to `x`).
+"""
+function interpolated_basis(basis::HomogeneousBasis, x::AbstractVector{T}) where{T}
+    interpolated_basis!(Vector{float(T)}(undef, degrees_of_freedom(basis)), basis, x)
 end
