@@ -42,4 +42,8 @@ end
     end
     @test_throws ArgumentError CappedCartesianIndices(1, (3, 3,)) # sum too low
     @test_throws ArgumentError CappedCartesianIndices(5, (0, 3,)) # negative
+    T = typeof(CappedCartesianIndices(5, (3, 3,)))
+    @test Base.IteratorSize(T) ≡ Base.HasLength()
+    @test Base.IteratorEltype(T) ≡ Base.HasEltype()
+    @test Base.eltype(T) ≡ Tuple{Int,Int}
 end

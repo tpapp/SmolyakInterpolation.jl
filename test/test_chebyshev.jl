@@ -24,6 +24,7 @@ end
     Z = @inferred evaluate(N, Chebyshev(), x)
     @test size(Z) == (J, N)
     @test Z ≈ ((t, n) -> cos(n * t)).(acos.(x), (0:(N-1))')
+    @test @inferred(evaluate(N, Chebyshev(), first(x))) == Z[1, :]
 
     @test size(evaluate(0, Chebyshev(), x)) == (J, 0)
     @test evaluate(1, Chebyshev(), x) == ones(J, 1)
