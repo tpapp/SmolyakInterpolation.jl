@@ -79,10 +79,10 @@ end
     # test at other points
     xs = [rand(2) .* 2 .- 1 for _ in 1:50]
     for x in xs
-        @test interpolate(B, c, x) ≈ f(x) atol = 1e-2
+        f̃x = interpolate(B, c, x)
+        @test f̃x ≈ f(x) atol = 1e-2
         a = interpolated_basis(B, x)
         @test length(a) == d
-        @test dot(a, c) ≈ fx[i]
-
+        @test dot(a, c) ≈ f̃x
     end
 end
