@@ -9,7 +9,7 @@ export
 
 using ArgCheck: @argcheck
 using DocStringExtensions: FIELDS, SIGNATURES, TYPEDEF
-using Parameters: @unpack
+using UnPack: @unpack
 using StaticArrays: SVector
 
 include("utilities.jl")
